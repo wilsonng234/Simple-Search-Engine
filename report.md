@@ -231,15 +231,15 @@ The backend utility functions are tested by JUnit with 97% instruction coverage 
 # Testing
 
 The web ui and database are tested manually.  
-The utilities functions are tested by JUnit with 97% instruction coverage and 91% branch coverage.
+The utilities functions are tested by JUnit with 97% instruction coverage and 91% branch coverage.  
 
-Crawler form:
+Crawler form:  
 <img src="imgs/crawlerForm.png" alt="crawler form" width="800" />
 
 Crawling:  
 <img src="imgs/crawling.png" alt="crawling" width="800" />
 
-Query recommendation:
+Query recommendation:  
 <img src="imgs/queryRecommendation.png" alt="query recommendation" width="800" />
 
 Searching:  
