@@ -69,7 +69,7 @@ The following collections are used:
     - Primary key: `termWeightId`
     - Indexes: `termWeightId`(indexed, unique), `docId`(indexed, unique)
 
-    The collection stores the term weights of each page docId. The docId is indexed to provide quick access to the term weights of the page. The term weights are combined with its page rank for the final score calculation and will be specified in the algorithm section of the report.  
+    The collection stores the term weights of each page docId. The docId is indexed to provide quick access to the term weights of the page. The term weights are combined with its page rank for the final score calculation and will be specified in the [algorithm](#term-weighting) section of the report.  
     <br>
 
 6. `pageRanks`(collection)
@@ -78,45 +78,32 @@ The following collections are used:
     - Primary key: `docId`
     - Indexes: `docId`(indexed, unique)
 
-    The collection stores the page rank of each page docId. The docId is indexed to provide quick access to the page rank of the page. The page rank is combined with its term weight for the final score calculation and will be specified in the algorithm section of the report.  
+    The collection stores the page rank of each page docId. The docId is indexed to provide quick access to the page rank of the page. The page rank is combined with its term weight for the final score calculation and will be specified in the [algorithm](#pagerank) section of the report.  
     <br>
 
 # Algorithm
 
 ## Crawler
 
-The crawling strategy is based on the BFS algorithm. The crawler will start from the seed URL and crawl the web pages in
-breadth-first order. The crawler will stop when the number of crawled pages reaches the limit or when there is no more
-pages to crawl.
+The crawler uses JSoup to parse the HTML of the web pages. It will extract the title, body, size, last modification date and child URLs of the page. The order of crawling strategy is based on the BFS algorithm. It will start from the seed URL and crawl the web pages in breadth-first order. The stopping criteria is when the number of crawled pages reaches the limit or when there is no more pages to crawl.
 
 ## Term Weighting
 
-$ \text{idf} = \log_2{\frac{N}{df}}$  
-$ \text{Term weight} = \frac{tf}{\max{TF}}*idf$  
-The term weighting is based on the TF-IDF algorithm. The term frequency is calculated by the number of times the term is
-found in the page. The inverse document frequency(idf) is calculated by the logarithm of the total number of pages
-divided by the number of pages that contain the term. The term weight is calculated by the product of the term frequency
-and the idf.
+$ \text{idf} = \log_2{\frac{\text{N}}{\text{df}}}$  
+$ \text{Term weight} = \frac{\text{tf}}{\max{\text{TF}}}\*\text{idf}$  
+The term weighting is based on the TF-IDF algorithm. The term frequency is calculated by the number of times the term is found in the page. The inverse document frequency(idf) is calculated by the logarithm of the total number of pages divided by the number of pages that contain the term. The term weight is calculated as the product of the term frequency and the idf.
 
 ## PageRank
 
-The PageRank algorithm is used to rank the pages based on the link structure of the web. The PageRank algorithm is based
-on the following formula:  
-PR = (1-d) + d \* [PR(T1)/C(T1) + ... + PR(Tn)/C(Tn)]
-where PR is the PageRank of the page, d is the damping factor, T1, ..., Tn are the pages that link to the page, and C(
-T1), ..., C(Tn) are the number of outbound links of T1, ..., Tn.  
+The PageRank algorithm is used to rank the pages based on the link structure of the web. The PageRank algorithm is based on the following formula:  
+PR = (1-d) + d \* [PR(T1)/C(T1) + ... + PR(Tn)/C(Tn)]  
+where PR is the PageRank of the page, d is the damping factor, T1, ..., Tn are the pages that link to the page, and C(T1), ..., C(Tn) are the number of outbound links of T1, ..., Tn.  
 d is set to 0.85 in our implementation.  
-The outbound link does not contain duplicate in our implementation. Therefore, spamming the outbound link will not
-affect the PageRank of the page.
+The outbound link does not contain duplicate in our implementation. Therefore, spamming the outbound link will not affect the PageRank of the page.
 
 ## Mechanism favoring title words
 
-The words in the title and in the body will share the same entry in the `words` collection. However, the term weight
-calculation of title words and body words are different. Given the same word, it will have different term frequency,
-maxTF, document frequency, and inverse document frequency in the title and in the body. Therefore, the term weight of
-the title words and body words are calculated separately. In additional to it, the title words are favoured by
-multiplying a constant factor to its term weight. The constant factor is set to 10.0 in our implementation.  
-The following code example illustrates the term weight calculation of title words and body words:
+The words in the title and in the body will share the same entry in the `words` collection. However, the term weight calculation of title words and body words are different. Given the same word, it will have different term frequency, maxTF, document frequency, and inverse document frequency in the title and in the body. Therefore, the term weight of the title words and body words are calculated separately. In additional to it, the title words are favoured by multiplying a constant factor to its term weight. The constant factor is set to 10.0 in our implementation. The following code example illustrates the term weight calculation of title words and body words:
 
 ```java
 class TermWeightExample {
@@ -125,14 +112,16 @@ class TermWeightExample {
         for (Posting posting : titlePostings) {
             // add the term weight of title words
             double originTermWeight = documentsVector.get(docIndex).get(wordIndex);
-            double additionTermWeight = titleWeight * VSMUtils.getTermWeight(titleTF, numDocs, titleDocFreq, titleMaxTF);
+            double additionTermWeight =
+                titleWeight * VSMUtils.getTermWeight(titleTF, numDocs, titleDocFreq, titleMaxTF);
             documentsVector.get(docIndex).set(wordIndex, originTermWeight + additionTermWeight);
         }
 
         for (Posting posting : bodyPostings) {
             // add the term weight of body words
             double originTermWeight = documentsVector.get(docIndex).get(wordIndex);
-            double additionTermWeight = VSMUtils.getTermWeight(bodyTF, numDocs, bodyDocFreq, bodyMaxTF);
+            double additionTermWeight =
+                VSMUtils.getTermWeight(bodyTF, numDocs, bodyDocFreq, bodyMaxTF);
             documentsVector.get(docIndex).set(wordIndex, originTermWeight + additionTermWeight);
         }
     }
@@ -141,26 +130,28 @@ class TermWeightExample {
 
 ## Query Processing
 
-The query will be tokenized and extract the normalWords and phraseWords. The phraseWords are quoted terms and the
-normalWords are uni-grams that include both the quoted terms and the unquoted terms. The query will be processed in the
-following steps:
+The query will be tokenized and be used to extract the normalWords and phraseWords. The phraseWords are quoted terms quoted by `"` and the normalWords are uni-grams that include both the quoted terms and the unquoted terms.  
+For example: query `"test page` will be parsed as `phraseWords: ["test page"], normalWords: ["test", "page"]`.
+
+The query will be processed in the following steps:
 
 1. Extract normal words:
     - The normal words will be tokenized
     - The normal words will remove the leading and trailing punctuations
     - The normal words will be stemmed by the Porter Stemmer
-    - The normal words will remove the stop words using the [stop word list](src/main/resources/static/stopwords.txt)
+    - The normal words will remove the stop words using the stemmed [stop word list](src/main/resources/static/stopwords.txt)
 2. Extract phrase words:
     - The phrase words will be extracted by parsing the quoted terms
     - The phrase words will be tokenized
     - The phrase words will remove the leading and trailing punctuations
     - The phrase words will be stemmed by the Porter Stemmer
-    - The phrase words will not remove the stop words to follow the crawler nGrams extraction strategy
+    - The phrase words will not remove the stop words to follow the crawler's nGram extraction strategy
     - The phrase words will be joined by space to form the phrase and try to match the words in the `words` collection
 
 The query vector will be formed by the frequency of normal words and phrase words.  
 For normal words, each word frequency will contribute to a weight of 1 to the query vector.  
 For phrase words, each phrase word frequency will contribute to a weight of 10 to the query vector.  
+Therefore, if the phrase is both the title and a phrase word, it will contribute to a score of 10\*10 times more than comparing to a normal word in the body.  
 This will be illustrated in the following code example:
 
 ```java
@@ -176,13 +167,12 @@ class queryExample {
 
 ## Score calculation
 
-The score of each page will be calculated as a linear combination of page rank and cosine similarity of the query vector
-and the document vector.  
-Query vector is formed as in Query Processing section.  
+The score of each page will be calculated as a linear combination of page rank and cosine similarity of the query vector and the document vector.  
+Query vector is formed as stated in Query Processing section.  
 Document vector is formed by the term weight of each word in the document.  
 Score of each page is calculated by the following formula:  
-`score = w1 * cosineSimilarity(queryVector, documentVector) + w2 * pageRank` where w1 = 0.8 and w2 = 0.2 in our
-implementation.
+`score = w1 * cosineSimilarity(queryVector, documentVector) + w2 * pageRank`  
+where `w1 = 0.8` and `w2 = 0.2` in our implementation.
 
 # Installation Procedure
 
@@ -193,8 +183,7 @@ The installation procedure is documented in README.md in the root directory of t
 ## Grammatical filtering
 
 Standford CoreNLP library is used to perform parts of speech recognition.  
-After using the CoreNLP library to get the pos tag of each word, the biGrams and triGrams will be filtered by the
-following grammatical rules to extract useful phrases only:
+After using the CoreNLP library to get the pos tag of each word, the biGrams and triGrams will be filtered by the following grammatical rules to extract useful phrases only:
 
 ```
 // JJ: adjective
@@ -213,24 +202,19 @@ TriGram:
 
 ## Page Rank
 
-The page rank algorithm and to formula to combine it with tfidf is illustrated in the Algorithm section of the report
-already.
+The page rank algorithm and the formula to combine it with tfidf is illustrated in the [Algorithm](#algorithm) section of the report already.
 
 ## Multithreading
 
-Multithreading is used for the calculation of term weight. Each task will handle a chunk of words in the `words`
-collection. Each task will perform update to the same document vector in parallel. After all the tasks are completed,
-the document vector, the search engine can use it to calculate the cosine similarity with the query vector.
+Multithreading is used for the calculation of term weight. Each task will handle a chunk of words in the `words` collection and perform update to the same document vector in parallel. After all the tasks are completed, the document vector will be stored in the `termWeights` collection. The search engine query the `termWeights` collection to retrieve the document vector for calculating the cosine similarity with the query vector during searching.
 
 ## Query recommendation based on prefix truncation
 
 The query recommendation is implemented by prefix truncation.  
-The web UI keep tracks of the current query entered by user and send the last one word, last two words, last three words
-as the prefix to the backend to perform prefix truncation.  
+The web UI keep tracks of the current query entered by user and send the last one word, last two words, last three words as the prefixes to the backend to perform prefix truncation.  
 Prefix truncation can be supported by mongoDB efficiently because mongoDB uses B+ Tree to index the words in
-the `words` collection.  
-The prefix truncation can be done by using the `$regex` operator to perform prefix matching.  
-Here is the regex pattern to perform prefix matching: `^<prefix>` where `<prefix>` is the prefix to be matched.
+the `words` collection. The prefix truncation can be done by using the `$regex` operator to perform prefix matching.  
+Here is the regex pattern to perform prefix matching: `/^<prefix>/` where `<prefix>` is the prefix to be matched.
 
 ## Support crawling in the web UI
 
@@ -238,10 +222,30 @@ The web UI supports crawling by providing a form to user to enter the seed URL a
 The form could be opened by clicking the React icon above the search bar.  
 After submitting the form, the web UI will send a post request to the backend to start crawling.
 
+## Branch coverage report
+
+The backend branch coverage report is supported by running `.\mvnw install jacoco:report`.  
+The backend utility functions are tested by JUnit with 97% instruction coverage and 91% branch coverage.  
+<img src="imgs/branchCoverage.png" alt="branch coverage" width="800" />
+
 # Testing
 
 The web ui and database are tested manually.  
 The utilities functions are tested by JUnit with 97% instruction coverage and 91% branch coverage.
-![branch coverage](imgs/branchCoverage.png)
+
+Crawler form:
+<img src="imgs/crawlerForm.png" alt="crawler form" width="800" />
+
+Crawling:  
+<img src="imgs/crawling.png" alt="crawling" width="800" />
+
+Query recommendation:
+<img src="imgs/queryRecommendation.png" alt="query recommendation" width="800" />
+
+Searching:  
+<img src="imgs/searching.png" alt="searching" width="800" />
+
+Result page:  
+<img src="imgs/resultPage.png" alt="result page" width="800" />
 
 # Conclusion
