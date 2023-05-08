@@ -1,0 +1,6 @@
+[submodule "Simple-Search-Engine-UI"]
+	path = Simple-Search-Engine-UI
+	url = https://github.com/wilsonng234/Simple-Search-Engine-UI.git
+[submodule "Simple-Search-Engine-Backend"]
+	path = Simple-Search-Engine-Backend
+	url = https://github.com/wilsonng234/Simple-Search-Engine-Backend.git
