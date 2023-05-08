@@ -66,7 +66,7 @@ The following collections are used:
 5. `termWeights`(collection)
 
     - Fields: `docId`, `termWeights`
-    - Primary key: `termWeightId`
+    - Primary key: `docId`
     - Indexes: `termWeightId`(indexed, unique), `docId`(indexed, unique)
 
     The collection stores the term weights of each page docId. The docId is indexed to provide quick access to the term weights of the page. The term weights are combined with its page rank for the final score calculation and will be specified in the [algorithm](#term-weighting) section of the report.  
@@ -249,3 +249,18 @@ Result page:
 <img src="imgs/resultPage.png" alt="result page" width="800" />
 
 # Conclusion
+
+## Summary
+In this project, we have implemented a search engine that supports crawling, indexing, and searching.  
+The crawler is implemented by using the jsoup library.  
+The database for indexing is implemented by using mongoDB and Spring framework.  
+The search engine is implemented by using the vector space model and the page rank algorithm.  
+The web UI is implemented by using React.js.
+
+## Future works
+
+- The term weighting formula can be improved by using the BM25 algorithm to calculate the term weight.
+- Multi-threading can be used to further improve the performance of the crawler.
+- The search engine can be improved by using deep learning word2vec model to grouping up the similarity between words.
+- The database collection `termWeights` could use key `wordId` instead so that the size of the database will be as the number of words.  
+  It is useful if we have a large number of documents and the number of words is much smaller than the number of documents.
