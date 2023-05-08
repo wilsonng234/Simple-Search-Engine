@@ -89,8 +89,9 @@ The crawler uses JSoup to parse the HTML of the web pages. It will extract the t
 
 ## Term Weighting
 
-$ \text{idf} = \log_2{\frac{\text{N}}{\text{df}}}$  
-$ \text{Term weight} = \frac{\text{tf}}{\max{\text{TF}}}\*\text{idf}$  
+idf = log2(N/df)  
+term weight = tf/maxTF * idf  
+
 The term weighting is based on the TF-IDF algorithm. The term frequency is calculated by the number of times the term is found in the page. The inverse document frequency(idf) is calculated by the logarithm of the total number of pages divided by the number of pages that contain the term. The term weight is calculated as the product of the term frequency and the idf.
 
 ## PageRank
