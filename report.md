@@ -22,61 +22,64 @@ useful to provide user instant query recommendations based on the prefix entered
 We use MongoDB for storing the data.  
 The following collections are used:
 
-1. `Document`(collection)
-    - Fields: docId, url, size, title, lastModificationDate, titleWordFreqs, bodyWordFreqs, childrenUrls, maxTF
-    - Primary key: docId
-    - Indexes: docId(indexed), url(indexed)
+1. `documents`(collection)
 
-   This collection stores the statistics of a web page, such as its size, title, last modification date, word frequency
-   information, child page URLs, and the maximum term frequency over all its terms. The docId and url are indexed to
-   provide faster access to the document by either its unique ID or its unique URL.  
-   This collection also serves as a `ForwardIndex`, which supports quick search of statistics in a page by docId or
-   url.  
-   <br>
+    - Fields: `docId`, `url`, `size`, `title`, `lastModificationDate`, `titleWordFreqs`, `bodyWordFreqs`, `childrenUrls`, `titleMaxTF`, `bodyMaxTF`
+    - Primary key: `docId`
+    - Indexes: `docId`(indexed, unique), `url`(indexed, unique)
 
-2. `Word`(collection)
-    - Fields: wordId, word
-    - Primary key: wordId
-    - Indexes: wordId(indexed), word(indexed)
+    This collection stores the statistics of a web page, such as its size, title, last modification date, word frequency information, child page URLs, and the maximum term frequency over all its terms. The docId and url are indexed to provide faster access to the document by either its unique ID or its unique URL.  
+    This collection also serves as a `ForwardIndex`, which supports quick search of statistics in a page by docId or
+    url.  
+    <br>
 
-   This collection stores the wordId and word of each word in the corpus. The wordId and word are indexed to provide
-   quick access to the word by its id or to the id by its word. The word stores under this collection is up to tri-gram,
-   but it can also be extended to n-gram by storing the n-gram words into the collection or separate the collection into
-   multiple collections.  
-   <br>
+2. `words`(collection)
 
-3. `Posting`(collection)
-    - Fields: postingId, type, wordId, docId, positions
-    - Primary key: postingId
-    - Indexes: {type, wordId}(compound indexed), {type, wordId, docId}(compound indexed)
-    - Check constraints: type in {"title", "body"}
+    - Fields: `wordId`, `word`
+    - Primary key: `wordId`
+    - Indexes: `wordId`(indexed, unique), `word`(indexed, unique)
 
-   The collection stores the posting information of each word in each page. It is separated to `TitlePosting` and
-   `BodyPosting` by its `type` field. For each `type`, the wordId is indexed to provide a range retrieval based on its
-   wordId. Also, the wordId and docId are indexed to provide an exact page retrieval based on its wordId and docId.  
-   This collection also serves as a `TitleInvertedIndex` and `BodyInvertedIndex`, which supports quick search of posting
-   the posting list by {type, wordId}.  
-   <br>
+    This collection stores the wordId and word of each word in the corpus. The wordId and word are indexed to provide quick access to the word by its id or to the id by its word. The words stored under this collection is up to tri-gram, but it can also be extended to n-gram by storing the n-gram words into the collection directly or separate the collection into multiple collections.  
+    <br>
 
-4. `ParentLink`(collection)
-    - Fields: url, parentUrls
-    - Primary key: url
-    - Indexes: url(indexed)
+3. `postings`(collection)
 
-   The collection stores the parent urls of each page url. The url is indexed to provide quick access to the parent urls
-   of each page. The url is stored as a string for database consistency in case the page is not indexed
-   and the docId is not assigned.  
-   <br>
+    - Fields: `postingId`, `type`, `wordId`, `docId`, `tf`
+    - Primary key: `postingId`
+    - Indexes: `{type, wordId}`(compound indexed), `{type, wordId, docId}`(compound indexed, unique)
+    - Check constraints: `type in {"title", "body"}`
 
-5. `PageRank`(collection)
-    - Fields: docId, pageRank
-    - Primary key: docId
-    - Indexes: docId(indexed)
+    The collection stores the posting information of each word in each page. It is logically separated to `TitlePosting` and `BodyPosting` by its type field. For each type, the wordId is indexed to provide a range retrieval based on its wordId. Also, the wordId and docId are indexed to provide an exact posting retrieval based on its wordId and docId.  
+    This collection also serves as a `TitleInvertedIndex` and `BodyInvertedIndex`, which supports quick search of posting
+    the posting list by {type, wordId}.  
+    <br>
 
-   The collection stores the page rank of each page docId. The docId is indexed to provide quick access to the page rank
-   of the page. The page rank is combined with its term weight for the final score calculation and will be specified in
-   the algorithm section of the report.   
-   <br>
+4. `parentLinks`(collection)
+
+    - Fields: `url`, `parentUrls`
+    - Primary key: `url`
+    - Indexes: `url`(indexed, unique)
+
+    The collection stores the parent urls of each page url. The url is indexed to provide quick access to the parent urls of each page. The url is stored as a string for database consistency in case the page is not indexed and the docId is not assigned.  
+    <br>
+
+5. `termWeights`(collection)
+
+    - Fields: `docId`, `termWeights`
+    - Primary key: `termWeightId`
+    - Indexes: `termWeightId`(indexed, unique), `docId`(indexed, unique)
+
+    The collection stores the term weights of each page docId. The docId is indexed to provide quick access to the term weights of the page. The term weights are combined with its page rank for the final score calculation and will be specified in the algorithm section of the report.  
+    <br>
+
+6. `pageRanks`(collection)
+
+    - Fields: `docId`, `pageRank`
+    - Primary key: `docId`
+    - Indexes: `docId`(indexed, unique)
+
+    The collection stores the page rank of each page docId. The docId is indexed to provide quick access to the page rank of the page. The page rank is combined with its term weight for the final score calculation and will be specified in the algorithm section of the report.  
+    <br>
 
 # Algorithm
 
@@ -88,8 +91,8 @@ pages to crawl.
 
 ## Term Weighting
 
-idf = $\log_2{\frac{N}{df}}$  
-Term weight = $\frac{tf}{\max{TF}} * idf$  
+$ \text{idf} = \log_2{\frac{N}{df}}$  
+$ \text{Term weight} = \frac{tf}{\max{TF}}*idf$  
 The term weighting is based on the TF-IDF algorithm. The term frequency is calculated by the number of times the term is
 found in the page. The inverse document frequency(idf) is calculated by the logarithm of the total number of pages
 divided by the number of pages that contain the term. The term weight is calculated by the product of the term frequency
@@ -99,7 +102,7 @@ and the idf.
 
 The PageRank algorithm is used to rank the pages based on the link structure of the web. The PageRank algorithm is based
 on the following formula:  
-PR = (1-d) + d * (PR(T1)/C(T1) + ... + PR(Tn)/C(Tn))  
+PR = (1-d) + d \* [PR(T1)/C(T1) + ... + PR(Tn)/C(Tn)]
 where PR is the PageRank of the page, d is the damping factor, T1, ..., Tn are the pages that link to the page, and C(
 T1), ..., C(Tn) are the number of outbound links of T1, ..., Tn.  
 d is set to 0.85 in our implementation.  
@@ -185,7 +188,7 @@ implementation.
 
 The installation procedure is documented in README.md in the root directory of the project.
 
-# Bonus
+# Additional Features
 
 ## Grammatical filtering
 
