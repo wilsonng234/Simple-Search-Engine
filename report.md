@@ -90,7 +90,7 @@ The crawler uses JSoup to parse the HTML of the web pages. It will extract the t
 ## Term Weighting
 
 idf = log2(N/df)  
-term weight = tf/maxTF * idf  
+term weight = tf/maxTF \* idf
 
 The term weighting is based on the TF-IDF algorithm. The term frequency is calculated by the number of times the term is found in the page. The inverse document frequency(idf) is calculated by the logarithm of the total number of pages divided by the number of pages that contain the term. The term weight is calculated as the product of the term frequency and the idf.
 
@@ -177,7 +177,16 @@ where `w1 = 0.8` and `w2 = 0.2` in our implementation.
 
 # Installation Procedure
 
-The installation procedure is documented in README.md in the root directory of the project.
+## Pre-requisites
+
+NodeJS: version `16.15.1`  
+SDK: Oracle OpenJDK version `17.0.6`  
+MongoDBCompass: version `1.36.4`
+
+## Instructions
+
+The installation procedure is documented in README in the root directory of the project.  
+You will also need to check the README in the UI and backend folders as instructed in the root README.
 
 # Additional Features
 
@@ -226,42 +235,71 @@ After submitting the form, the web UI will send a post request to the backend to
 ## Branch coverage report
 
 The backend branch coverage report is supported by running `.\mvnw install jacoco:report`.  
-The backend utility functions are tested by JUnit with 97% instruction coverage and 91% branch coverage.  
-<img src="imgs/branchCoverage.png" alt="branch coverage" width="800" />
+The backend utility functions are tested by JUnit with 97% instruction coverage and 91% branch coverage.
+
+![branch coverage](imgs/branchCoverage.png)
 
 # Testing
 
 The web ui and database are tested manually.  
-The utilities functions are tested by JUnit with 97% instruction coverage and 91% branch coverage.  
+The utilities functions are tested by JUnit with 97% instruction coverage and 91% branch coverage.
 
-Crawler form:  
-<img src="imgs/crawlerForm.png" alt="crawler form" width="800" />
+Crawler form:
 
-Crawling:  
-<img src="imgs/crawling.png" alt="crawling" width="800" />
+![crawler form](imgs/crawlerForm.png)
 
-Query recommendation:  
-<img src="imgs/queryRecommendation.png" alt="query recommendation" width="800" />
+Crawling:
 
-Searching:  
-<img src="imgs/searching.png" alt="searching" width="800" />
+![crawling](imgs/crawling.png)
 
-Result page:  
-<img src="imgs/resultPage.png" alt="result page" width="800" />
+Query recommendation:
+
+![query recommendation](imgs/queryRecommendation.png)
+
+Searching:
+
+![searching](imgs/searching.png)
+
+Result page:
+
+![result page](imgs/resultPage.png)
 
 # Conclusion
 
 ## Summary
+
 In this project, we have implemented a search engine that supports crawling, indexing, and searching.  
 The crawler is implemented by using the jsoup library.  
 The database for indexing is implemented by using mongoDB and Spring framework.  
 The search engine is implemented by using the vector space model and the page rank algorithm.  
 The web UI is implemented by using React.js.
 
+## Strengths
+
+-   The collection `termWeights` is efficient for small amount of documents because the key is `docId`
+    and the size of the collection is the same as the number of documents.
+-   The `pageRank` didn't count duplicates of same children link of a page. It could possibly prevent
+    spamming of a page by adding a lot of same children links to the page to boost up children link authority.
+-   The search engine supports multi-threading for term weight calculations.
+-   The web interface supports crawling via a form.
+-   The web interface supports query recommendation based on prefixes.
+
+## Weaknesses
+
+-   The collection `termWeights` is inefficient for a large amount of documents because the key is `docId`
+    and the size of the collection is the same as the number of documents.
+-   The `pageRank` didn't count duplicates of same children link of a page. It could be an useful information
+    to capture if the same page has multiple same child link.
+-   The search engine doesn't support multi-threading for crawling and indexing the pages.
+-   The web interface doesn't support relevance feedback.
+-   The web interface doesn't support displaying the statistics for the nGrams and the term weights.
+
 ## Future works
 
-- The term weighting formula can be improved by using the BM25 algorithm to calculate the term weight.
-- Multi-threading can be used to further improve the performance of the crawler.
-- The search engine can be improved by using deep learning word2vec model to grouping up the similarity between words.
-- The database collection `termWeights` could use key `wordId` instead so that the size of the database will be as the number of words.  
-  It is useful if we have a large number of documents and the number of words is much smaller than the number of documents.
+-   The term weighting formula can be improved by using the BM25 algorithm to calculate the term weight.
+-   Multi-threading can be used to further improve the performance of the crawler.
+-   The search engine can be improved by using deep learning word2vec model to grouping up the similarity between words.
+-   The database collection `termWeights` could use key `wordId` instead so that the size of the database will be as the number of words.  
+    It is useful if we have a large number of documents and the number of words is much smaller than the number of documents.
+-   Relevance feedback can be implemented to improve the search result.
+-   The web interface can be improved by displaying the statistics for the nGrams and the term weights.
