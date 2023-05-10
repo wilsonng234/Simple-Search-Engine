@@ -5,5 +5,5 @@ The project aims to develop a robust and efficient search engine that can crawl 
 ## Getting Started
 
 1. Clone the repository
-2. Check the `Installation` and `Getting started` sessions of [README](Simple-Search-Engine-UI/README.md) in the frontend folder
-3. Check the `Installation` and `Getting started` sessions of [README](Simple-Search-Engine-Backend/README.md) in the backend folder
+2. Check the `Installation` and `Getting started` sessions of [README](./Simple-Search-Engine-UI/README.md) in the frontend folder
+3. Check the `Installation` and `Getting started` sessions of [README](./Simple-Search-Engine-Backend/README.md) in the backend folder
