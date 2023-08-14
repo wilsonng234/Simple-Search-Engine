@@ -1,0 +1,31 @@
+---
+version: "3.8"
+
+services:
+  frontend:
+    build: ./Simple-Search-Engine-Frontend
+    image: simple-search-engine-frontend:1
+    ports:
+      - 3000:3000
+    volumes:
+      - ./Simple-Search-Engine-Frontend:/app
+
+  backend:
+    build: ./Simple-Search-Engine-Backend
+    image: simple-search-engine-backend:1
+    ports:
+      - 8080:8080
+    command: ./docker-entrypoint.sh # override default command in Dockerfile
+    volumes:
+      - ./Simple-Search-Engine-Backend:/app
+
+  database:
+    image: mongo:7.0.0-rc10
+    ports:
+      - 27017:27017
+    volumes:
+      - simple-search-engine:/data/db # create a volume to persist data
+
+volumes:
+  simple-search-engine:
+...
