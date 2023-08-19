@@ -7,8 +7,8 @@ services:
     image: simple-search-engine-frontend:1
     ports:
       - 3000:3000
-    volumes:
-      - ./Simple-Search-Engine-Frontend:/app
+    # volumes:
+    #   - ./Simple-Search-Engine-Frontend:/app
 
   backend:
     build: ./Simple-Search-Engine-Backend
@@ -16,8 +16,8 @@ services:
     ports:
       - 8080:8080
     command: ./docker-entrypoint.sh # override default command in Dockerfile
-    volumes:
-      - ./Simple-Search-Engine-Backend:/app
+    # volumes:
+    #   - ./Simple-Search-Engine-Backend:/app
 
   database:
     image: mongo:7.0.0-rc10
