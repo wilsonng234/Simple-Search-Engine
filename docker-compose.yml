@@ -9,6 +9,7 @@ services:
       - 3000:3000
     # volumes:
     #   - ./Simple-Search-Engine-Frontend:/app
+    restart: unless-stopped
 
   backend:
     build: ./Simple-Search-Engine-Backend
@@ -18,6 +19,7 @@ services:
     command: ./docker-entrypoint.sh # override default command in Dockerfile
     # volumes:
     #   - ./Simple-Search-Engine-Backend:/app
+    restart: unless-stopped
 
   database:
     image: mongo:7.0.0-rc10
@@ -25,6 +27,7 @@ services:
       - 27017:27017
     volumes:
       - simple-search-engine:/data/db # create a volume to persist data
+    restart: unless-stopped
 
 volumes:
   simple-search-engine:
