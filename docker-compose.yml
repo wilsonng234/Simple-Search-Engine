@@ -3,8 +3,10 @@ version: "3.8"
 
 services:
   frontend:
-    build: ./Simple-Search-Engine-Frontend
     image: simple-search-engine-frontend:1
+    build: 
+      context: ./Simple-Search-Engine-Frontend
+      dockerfile: Dockerfile.prod
     ports:
       - 3000:3000
     # volumes:
@@ -12,8 +14,8 @@ services:
     restart: unless-stopped
 
   backend:
-    build: ./Simple-Search-Engine-Backend
     image: simple-search-engine-backend:1
+    build: ./Simple-Search-Engine-Backend
     ports:
       - 8080:8080
     command: ./docker-entrypoint.sh # override default command in Dockerfile
